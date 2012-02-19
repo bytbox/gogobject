@@ -3,8 +3,8 @@
 // GtkEntryBuffer provides the text content in a GtkEntry.
 package entry_buffer
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gobject-2.0"
 
 var dialog *gtk.Dialog
 

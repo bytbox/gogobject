@@ -11,10 +11,10 @@
 // Look at the Image demo for additional pixbuf usage examples.
 package pixbufs
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdkpixbuf-2.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/cairo-1.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogobject/gdkpixbuf-2.0"
+import "github.com/bytbox/gogobject/cairo-1.0"
 import "math"
 import "time"
 import "sync"

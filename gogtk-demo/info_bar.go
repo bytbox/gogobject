@@ -3,7 +3,7 @@
 // Info bar widgets are used to report important messages to the user.
 package info_bar
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
 
 var window *gtk.Window
 

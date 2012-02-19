@@ -4,9 +4,9 @@
 // This demo shows how to use these features in a search entry.
 package search_entry
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogobject/gobject-2.0"
 import "time"
 
 var dialog *gtk.Dialog

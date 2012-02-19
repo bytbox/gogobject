@@ -6,9 +6,9 @@
 // and stock items.
 package stock_browser
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdkpixbuf-2.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogobject/gdkpixbuf-2.0"
 import "fmt"
 import "sort"
 import "bytes"

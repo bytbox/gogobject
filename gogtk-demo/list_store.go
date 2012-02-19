@@ -7,9 +7,9 @@
 package list_store
 
 import (
-	"github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
-	"github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
-	"github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+	"github.com/bytbox/gogobject/gdk-3.0"
+	"github.com/bytbox/gogobject/gobject-2.0"
+	"github.com/bytbox/gogobject/gtk-3.0"
 	"time"
 )
 

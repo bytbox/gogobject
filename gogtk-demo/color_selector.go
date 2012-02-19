@@ -4,10 +4,10 @@
 // a prebuilt dialog containing a GtkColorSelection.
 package color_selector
 
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/cairo-1.0"
-import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogobject/cairo-1.0"
+import "github.com/bytbox/gogobject/gobject-2.0"
 
 var color gdk.RGBA
 var window *gtk.Window
