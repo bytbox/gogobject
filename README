@@ -1,5 +1,15 @@
 --- !!! ---
 
+bytbox:
+
+We're now "go install"-able! Try
+
+  go install github.com/bytbox/gogobject/gtk-3.0
+
+--- !!! ---
+
+nsf:
+
 Just wanted to say, that the project is not dead. It's frozen due to the fact
 that the latest Go weekly got rid of makefiles. I'm working on replacement for
 that in a form of Go support for the waf build system. Should take less than a
