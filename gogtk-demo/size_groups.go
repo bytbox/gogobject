@@ -13,7 +13,7 @@
 // into a table, you would not include the GTK_FILL flag.
 package size_groups
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var dialog *gtk.Dialog
 

@@ -24,7 +24,7 @@
 // do that. There's a separate demo for GtkUIManager.
 package menus
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 import "fmt"
 
 func create_menu(depth int, tearoff bool) *gtk.Menu {

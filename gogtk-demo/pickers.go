@@ -4,7 +4,7 @@
 // They allow to select colors, fonts, files, directories and applications.
 package pickers
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var window *gtk.Window
 

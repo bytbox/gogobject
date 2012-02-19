@@ -3,7 +3,7 @@
 // GtkSpinner allows to show that background activity is on-going.
 package spinner
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var dialog *gtk.Dialog
 

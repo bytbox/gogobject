@@ -11,8 +11,8 @@
 // each side of each widget.
 package paned_widgets
 
-import "gobject/gobject-2.0"
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var window *gtk.Window
 

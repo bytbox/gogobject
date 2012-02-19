@@ -5,10 +5,10 @@
 // interface to set up cell renderers in an icon view.
 package iconview_edit
 
-import "gobject/gtk-3.0"
-import "gobject/gdk-3.0"
-import "gobject/gobject-2.0"
-import "gobject/gdkpixbuf-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdkpixbuf-2.0"
 
 var window *gtk.Window
 

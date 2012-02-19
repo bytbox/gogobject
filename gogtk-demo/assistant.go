@@ -5,8 +5,8 @@
 // through these steps.
 package assistant
 
-import "gobject/gdk-3.0"
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 import "fmt"
 import "time"
 

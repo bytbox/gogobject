@@ -4,7 +4,7 @@
 // This is also known as "disclosure triangle".
 package expander
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var dialog *gtk.Dialog
 

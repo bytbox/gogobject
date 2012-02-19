@@ -1,11 +1,15 @@
 #!/bin/bash
 
+set -e
+
 clean_in_dir() {
-	make -C $1 clean
+	pushd . > /dev/null
+	cd $1
+	go clean
+	popd > /dev/null
 }
 
-make clean
-clean_in_dir gi
+go clean
 clean_in_dir glib-2.0
 clean_in_dir gobject-2.0
 clean_in_dir cairo-1.0

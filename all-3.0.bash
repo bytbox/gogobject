@@ -8,8 +8,12 @@ error_exit() {
 }
 
 build() {
+	echo $1
 	./go-gobject-gen -config config.json $1
-	make -C $1 install || error_exit
+	pushd . > /dev/null
+	cd $1
+	go install
+	popd > /dev/null
 }
 
 ./clean.bash
@@ -18,7 +22,10 @@ go build -o go-gobject-gen
 build glib-2.0
 build gobject-2.0
 
-make -C cairo-1.0 install || error_exit
+pushd . > /dev/null
+cd cairo-1.0
+go install
+popd > /dev/null
 build atk-1.0
 build gio-2.0
 build gdkpixbuf-2.0

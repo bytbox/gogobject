@@ -1,6 +1,6 @@
 package main
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 import (
 	"./assistant"
 	"./builder"

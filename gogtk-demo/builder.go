@@ -3,7 +3,7 @@
 // Demonstrates an interface loaded from a XML description.
 package builder
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 import "./common"
 
 var window *gtk.Window

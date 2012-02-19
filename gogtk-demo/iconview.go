@@ -5,9 +5,9 @@
 // example might be helpful.
 package iconview
 
-import "gobject/gtk-3.0"
-import "gobject/gobject-2.0"
-import "gobject/gdkpixbuf-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdkpixbuf-2.0"
 import "strings"
 import "path/filepath"
 import "os"

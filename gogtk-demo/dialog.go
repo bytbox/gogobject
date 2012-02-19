@@ -3,7 +3,7 @@
 // Dialog widgets are used to pop up a transient window for user feedback.
 package dialog
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var window *gtk.Window
 var entry1 *gtk.Entry

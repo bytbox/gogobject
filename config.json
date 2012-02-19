@@ -1,4 +1,5 @@
 {
+	"namespace": "g",
 	"disguised-types": [
 		"gdk.Atom"
 	],

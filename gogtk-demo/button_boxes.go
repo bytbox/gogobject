@@ -3,7 +3,7 @@
 // The Button Box widgets are used to arrange buttons with padding.
 package button_boxes
 
-import "gobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
 
 var window *gtk.Window
 

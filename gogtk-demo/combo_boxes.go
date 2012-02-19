@@ -7,10 +7,10 @@
 // How the options are displayed is controlled by cell renderers.
 package combo_boxes
 
-import "gobject/gobject-2.0"
-import "gobject/gtk-3.0"
-import "gobject/gdk-3.0"
-import "gobject/gdkpixbuf-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gdkpixbuf-2.0"
 import "strings"
 import "regexp"
 

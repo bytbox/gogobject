@@ -4,8 +4,8 @@
 // completion in GtkEntry.
 package entry_completion
 
-import "gobject/gtk-3.0"
-import "gobject/gobject-2.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gtk-3.0"
+import "github.com/bytbox/gogithub.com/bytbox/gogobject/gobject-2.0"
 
 func create_completion_model() *gtk.TreeModel {
 	store := gtk.NewListStore(gobject.String)
