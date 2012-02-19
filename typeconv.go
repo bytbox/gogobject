@@ -3,11 +3,10 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gobject/gi"
 	"strings"
 )
 
-func CgoArrayToGoArray(elem *gi.TypeInfo, name string) string {
+func CgoArrayToGoArray(elem *TypeInfo, name string) string {
 	return fmt.Sprintf("(*(*[999999]%s)(unsafe.Pointer(%s)))",
 		CgoType(elem, TypeNone), name)
 }
@@ -23,13 +22,13 @@ const (
 	ConvOwnEverything
 )
 
-func OwnershipToConvFlags(t gi.Transfer) ConvFlags {
+func OwnershipToConvFlags(t Transfer) ConvFlags {
 	switch t {
-	case gi.TRANSFER_NOTHING:
+	case TRANSFER_NOTHING:
 		return ConvOwnNone
-	case gi.TRANSFER_CONTAINER:
+	case TRANSFER_CONTAINER:
 		return ConvOwnContainer
-	case gi.TRANSFER_EVERYTHING:
+	case TRANSFER_EVERYTHING:
 		return ConvOwnEverything
 	}
 	return 0
@@ -39,27 +38,27 @@ func OwnershipToConvFlags(t gi.Transfer) ConvFlags {
 // Go to Cgo Converter
 //------------------------------------------------------------------
 
-func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) string {
+func GoToCgoForInterface(bi *BaseInfo, arg0, arg1 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	printf := PrinterTo(&out)
 
 	switch bi.Type() {
-	case gi.INFO_TYPE_OBJECT:
-		prefix := gi.DefaultRepository().CPrefix(bi.Namespace())
+	case INFO_TYPE_OBJECT:
+		prefix := DefaultRepository().CPrefix(bi.Namespace())
 		printf("if %s != nil {\n", arg0)
 		printf("\t%s = %s.InheritedFrom%s%s()\n",
 			arg1, arg0, prefix, bi.Name())
 		printf("}")
-	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
+	case INFO_TYPE_ENUM, INFO_TYPE_FLAGS:
 		ctype := CgoTypeForInterface(bi, TypeNone)
 		printf("%s = %s(%s)", arg1, ctype, arg0)
-	case gi.INFO_TYPE_INTERFACE:
-		prefix := gi.DefaultRepository().CPrefix(bi.Namespace())
+	case INFO_TYPE_INTERFACE:
+		prefix := DefaultRepository().CPrefix(bi.Namespace())
 		printf("if %s != nil {\n", arg0)
 		printf("\t%s = %s.Implements%s%s()",
 			arg1, arg0, prefix, bi.Name())
 		printf("}")
-	case gi.INFO_TYPE_STRUCT:
+	case INFO_TYPE_STRUCT:
 		ns := bi.Namespace()
 		if ns == "cairo" {
 			printf(CairoGoToCgoForInterface(bi, arg0, arg1, flags))
@@ -78,7 +77,7 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 			printf("%s = *(*%s)(unsafe.Pointer(&%s))",
 				arg1, ctype, arg0)
 		}
-	case gi.INFO_TYPE_CALLBACK:
+	case INFO_TYPE_CALLBACK:
 		printf("if %s != nil {\n", arg0)
 		printf("\t%s = unsafe.Pointer(&%s)", arg1, arg0)
 		printf("}")
@@ -87,25 +86,25 @@ func GoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) st
 	return out.String()
 }
 
-func GoToCgo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
+func GoToCgo(ti *TypeInfo, arg0, arg1 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	printf := PrinterTo(&out)
 
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			printf("%s = unsafe.Pointer(%s)", arg1, arg0)
 			break
 		}
 		printf("<ERROR: void>")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
 		printf("%s = _GoStringToGString(%s)", arg1, arg0)
 		if flags&ConvOwnEverything == 0 {
 			printf("\ndefer C.free(unsafe.Pointer(%s))", arg1)
 		}
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		switch ti.ArrayType() {
-		case gi.ARRAY_TYPE_C:
+		case ARRAY_TYPE_C:
 			var nelem string
 			if ti.IsZeroTerminated() {
 				nelem = fmt.Sprintf("(len(%s) + 1)", arg0)
@@ -131,11 +130,11 @@ func GoToCgo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
 			}
 
 		}
-	case gi.TYPE_TAG_GLIST:
-	case gi.TYPE_TAG_GSLIST:
-	case gi.TYPE_TAG_GHASH:
-	case gi.TYPE_TAG_ERROR:
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_GLIST:
+	case TYPE_TAG_GSLIST:
+	case TYPE_TAG_GHASH:
+	case TYPE_TAG_ERROR:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= ConvPointer
 		}
@@ -150,9 +149,9 @@ func GoToCgo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
 	return out.String()
 }
 
-func GoToCgoForTag(tag gi.TypeTag, arg0, arg1 string, flags ConvFlags) string {
+func GoToCgoForTag(tag TypeTag, arg0, arg1 string, flags ConvFlags) string {
 	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
+	case TYPE_TAG_BOOLEAN:
 		return fmt.Sprintf("%s = _GoBoolToCBool(%s)", arg1, arg0)
 	default:
 		if flags & ConvPointer == 0 {
@@ -172,12 +171,12 @@ func GoToCgoForTag(tag gi.TypeTag, arg0, arg1 string, flags ConvFlags) string {
 // Cgo to Go Converter
 //------------------------------------------------------------------
 
-func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) string {
+func CgoToGoForInterface(bi *BaseInfo, arg1, arg2 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	printf := PrinterTo(&out)
 
 	switch bi.Type() {
-	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+	case INFO_TYPE_OBJECT, INFO_TYPE_INTERFACE:
 		gotype := GoTypeForInterface(bi, TypeReturn)
 		if flags&ConvOwnEverything != 0 {
 			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), false))",
@@ -186,10 +185,10 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 			printf("%s = (*%s)(%sObjectWrap(unsafe.Pointer(%s), true))",
 				arg2, gotype, Config.Sys.GNS, arg1)
 		}
-	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
+	case INFO_TYPE_ENUM, INFO_TYPE_FLAGS:
 		gotype := GoTypeForInterface(bi, TypeReturn)
 		printf("%s = %s(%s)", arg2, gotype, arg1)
-	case gi.INFO_TYPE_STRUCT, gi.INFO_TYPE_UNION:
+	case INFO_TYPE_STRUCT, INFO_TYPE_UNION:
 		ns := bi.Namespace()
 		if ns == "cairo" {
 			printf(CairoCgoToGoForInterface(bi, arg1, arg2, flags))
@@ -222,25 +221,25 @@ func CgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) st
 	return out.String()
 }
 
-func CgoToGo(ti *gi.TypeInfo, arg1, arg2 string, flags ConvFlags) string {
+func CgoToGo(ti *TypeInfo, arg1, arg2 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	printf := PrinterTo(&out)
 
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			printf("%s = %s", arg2, arg1)
 			break
 		}
 		printf("<ERROR: void>")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
 		printf("%s = C.GoString(%s)", arg2, arg1)
 		if flags&ConvOwnEverything != 0 {
 			printf("\nC.g_free(unsafe.Pointer(%s))", arg1)
 		}
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		switch ti.ArrayType() {
-		case gi.ARRAY_TYPE_C:
+		case ARRAY_TYPE_C:
 			// array was allocated already at this point
 			printf("for i := range %s {\n", arg2)
 			array := CgoArrayToGoArray(ti.ParamType(0), arg1)
@@ -249,7 +248,7 @@ func CgoToGo(ti *gi.TypeInfo, arg1, arg2 string, flags ConvFlags) string {
 			printf(PrintLinesWithIndent(conv))
 			printf("}")
 		}
-	case gi.TYPE_TAG_GLIST:
+	case TYPE_TAG_GLIST:
 		ptype := ti.ParamType(0)
 		printf("for iter := (*_GList)(unsafe.Pointer(%s)); iter != nil; iter = iter.next {\n", arg1)
 		elt := fmt.Sprintf("(%s)(iter.data)",
@@ -259,7 +258,7 @@ func CgoToGo(ti *gi.TypeInfo, arg1, arg2 string, flags ConvFlags) string {
 		printf(PrintLinesWithIndent(conv))
 		printf("\t%s = append(%s, elt)\n", arg2, arg2)
 		printf("}")
-	case gi.TYPE_TAG_GSLIST:
+	case TYPE_TAG_GSLIST:
 		ptype := ti.ParamType(0)
 		printf("for iter := (*_GSList)(unsafe.Pointer(%s)); iter != nil; iter = iter.next {\n", arg1)
 		elt := fmt.Sprintf("(%s)(iter.data)",
@@ -269,13 +268,13 @@ func CgoToGo(ti *gi.TypeInfo, arg1, arg2 string, flags ConvFlags) string {
 		printf(PrintLinesWithIndent(conv))
 		printf("\t%s = append(%s, elt)\n", arg2, arg2)
 		printf("}")
-	case gi.TYPE_TAG_GHASH:
-	case gi.TYPE_TAG_ERROR:
+	case TYPE_TAG_GHASH:
+	case TYPE_TAG_ERROR:
 		printf("if %s != nil {\n", arg1)
 		printf("\t%s = errors.New(C.GoString(((*_GError)(unsafe.Pointer(%s))).message))\n", arg2, arg1)
 		printf("\tC.g_error_free(%s)\n", arg1)
 		printf("}\n")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= ConvPointer
 		}
@@ -290,36 +289,36 @@ func CgoToGo(ti *gi.TypeInfo, arg1, arg2 string, flags ConvFlags) string {
 	return out.String()
 }
 
-func CgoToGoForTag(tag gi.TypeTag, arg1, arg2 string, flags ConvFlags) string {
+func CgoToGoForTag(tag TypeTag, arg1, arg2 string, flags ConvFlags) string {
 	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
+	case TYPE_TAG_BOOLEAN:
 		return fmt.Sprintf("%s = %s != 0", arg2, arg1)
-	case gi.TYPE_TAG_INT8:
+	case TYPE_TAG_INT8:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_UINT8:
+	case TYPE_TAG_UINT8:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_INT16:
+	case TYPE_TAG_INT16:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_UINT16:
+	case TYPE_TAG_UINT16:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_INT32:
+	case TYPE_TAG_INT32:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_UINT32:
+	case TYPE_TAG_UINT32:
 		return fmt.Sprintf("%s = int(%s)", arg2, arg1)
-	case gi.TYPE_TAG_INT64:
+	case TYPE_TAG_INT64:
 		return fmt.Sprintf("%s = int64(%s)", arg2, arg1)
-	case gi.TYPE_TAG_UINT64:
+	case TYPE_TAG_UINT64:
 		return fmt.Sprintf("%s = uint64(%s)", arg2, arg1)
-	case gi.TYPE_TAG_FLOAT:
+	case TYPE_TAG_FLOAT:
 		return fmt.Sprintf("%s = float64(%s)", arg2, arg1)
-	case gi.TYPE_TAG_DOUBLE:
+	case TYPE_TAG_DOUBLE:
 		return fmt.Sprintf("%s = float64(%s)", arg2, arg1)
-	case gi.TYPE_TAG_GTYPE:
+	case TYPE_TAG_GTYPE:
 		if Config.Namespace != "GObject" {
 			return fmt.Sprintf("%s = gobject.Type(%s)", arg2, arg1)
 		}
 		return fmt.Sprintf("%s = Type(%s)", arg2, arg1)
-	case gi.TYPE_TAG_UNICHAR:
+	case TYPE_TAG_UNICHAR:
 		return fmt.Sprintf("%s = rune(%s)", arg2, arg1)
 	}
 
@@ -331,7 +330,7 @@ func CgoToGoForTag(tag gi.TypeTag, arg1, arg2 string, flags ConvFlags) string {
 // Simple Cgo to Go Converter
 //------------------------------------------------------------------
 
-func SimpleCgoToGo(ti *gi.TypeInfo, arg0, arg1 string, flags ConvFlags) string {
+func SimpleCgoToGo(ti *TypeInfo, arg0, arg1 string, flags ConvFlags) string {
 	cgotype := CgoType(ti, TypeNone)
 	arg0 = fmt.Sprintf("(%s)(%s)", cgotype, arg0)
 	return CgoToGo(ti, arg0, arg1, flags)

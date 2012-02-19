@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"gobject/gi"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -139,7 +138,7 @@ func main() {
 		panic(err)
 	}
 
-	repo := gi.DefaultRepository()
+	repo := DefaultRepository()
 
 	// load namespace
 	_, err = repo.Require(Config.Namespace, Config.Version, 0)

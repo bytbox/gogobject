@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 error_exit() {
 	echo -e "\033[1;31m!!!!!!!!! ERROR !!!!!!!!!!\033[0m"
 	exit $?
@@ -12,8 +14,7 @@ build() {
 
 ./clean.bash
 
-make -C gi install || error_exit
-make || error_exit
+go build -o go-gobject-gen
 build glib-2.0
 build gobject-2.0
 

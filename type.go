@@ -5,7 +5,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gobject/gi"
 	"strings"
 	"unsafe"
 )
@@ -35,39 +34,39 @@ const (
 // Cgo Type (C type in Go)
 //------------------------------------------------------------------
 
-func CgoType(ti *gi.TypeInfo, flags TypeFlags) string {
+func CgoType(ti *TypeInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			out.WriteString("unsafe.Pointer")
 			break
 		}
 		panic("Non-pointer void type is not supported in cgo")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
 		out.WriteString("*C.char")
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		switch ti.ArrayType() {
-		case gi.ARRAY_TYPE_C:
+		case ARRAY_TYPE_C:
 			out.WriteString("*")
 			out.WriteString(CgoType(ti.ParamType(0), flags))
-		case gi.ARRAY_TYPE_ARRAY:
+		case ARRAY_TYPE_ARRAY:
 			out.WriteString("*C.GArray")
-		case gi.ARRAY_TYPE_PTR_ARRAY:
+		case ARRAY_TYPE_PTR_ARRAY:
 			out.WriteString("*C.GPtrArray")
-		case gi.ARRAY_TYPE_BYTE_ARRAY:
+		case ARRAY_TYPE_BYTE_ARRAY:
 			out.WriteString("*C.GByteArray")
 		}
-	case gi.TYPE_TAG_GLIST:
+	case TYPE_TAG_GLIST:
 		out.WriteString("*C.GList")
-	case gi.TYPE_TAG_GSLIST:
+	case TYPE_TAG_GSLIST:
 		out.WriteString("*C.GSList")
-	case gi.TYPE_TAG_GHASH:
+	case TYPE_TAG_GHASH:
 		out.WriteString("*C.GHashTable")
-	case gi.TYPE_TAG_ERROR:
+	case TYPE_TAG_ERROR:
 		out.WriteString("*C.GError")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= TypePointer
 		}
@@ -82,11 +81,11 @@ func CgoType(ti *gi.TypeInfo, flags TypeFlags) string {
 	return out.String()
 }
 
-func CgoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
+func CgoTypeForInterface(bi *BaseInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
 	switch bi.Type() {
-	case gi.INFO_TYPE_CALLBACK:
+	case INFO_TYPE_CALLBACK:
 		out.WriteString("unsafe.Pointer")
 	default:
 		ns := bi.Namespace()
@@ -99,13 +98,13 @@ func CgoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 		}
 
 		out.WriteString("C.")
-		out.WriteString(gi.DefaultRepository().CPrefix(ns))
+		out.WriteString(DefaultRepository().CPrefix(ns))
 		out.WriteString(bi.Name())
 	}
 	return out.String()
 }
 
-func CgoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
+func CgoTypeForTag(tag TypeTag, flags TypeFlags) string {
 	var out bytes.Buffer
 	p := PrinterTo(&out)
 
@@ -114,31 +113,31 @@ func CgoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
 	}
 
 	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
+	case TYPE_TAG_BOOLEAN:
 		p("C.int")
-	case gi.TYPE_TAG_INT8:
+	case TYPE_TAG_INT8:
 		p("C.int8_t")
-	case gi.TYPE_TAG_UINT8:
+	case TYPE_TAG_UINT8:
 		p("C.uint8_t")
-	case gi.TYPE_TAG_INT16:
+	case TYPE_TAG_INT16:
 		p("C.int16_t")
-	case gi.TYPE_TAG_UINT16:
+	case TYPE_TAG_UINT16:
 		p("C.uint16_t")
-	case gi.TYPE_TAG_INT32:
+	case TYPE_TAG_INT32:
 		p("C.int32_t")
-	case gi.TYPE_TAG_UINT32:
+	case TYPE_TAG_UINT32:
 		p("C.uint32_t")
-	case gi.TYPE_TAG_INT64:
+	case TYPE_TAG_INT64:
 		p("C.int64_t")
-	case gi.TYPE_TAG_UINT64:
+	case TYPE_TAG_UINT64:
 		p("C.uint64_t")
-	case gi.TYPE_TAG_FLOAT:
+	case TYPE_TAG_FLOAT:
 		p("C.float")
-	case gi.TYPE_TAG_DOUBLE:
+	case TYPE_TAG_DOUBLE:
 		p("C.double")
-	case gi.TYPE_TAG_GTYPE:
+	case TYPE_TAG_GTYPE:
 		p("C.GType")
-	case gi.TYPE_TAG_UNICHAR:
+	case TYPE_TAG_UNICHAR:
 		p("C.uint32_t")
 	default:
 		panic("unreachable")
@@ -151,43 +150,43 @@ func CgoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
 // C Type
 //------------------------------------------------------------------
 
-func CTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
+func CTypeForTag(tag TypeTag, flags TypeFlags) string {
 	return CgoTypeForTag(tag, flags)[2:]
 }
 
-func CType(ti *gi.TypeInfo, flags TypeFlags) string {
+func CType(ti *TypeInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			out.WriteString("void*")
 			break
 		}
 		out.WriteString("void")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
 		out.WriteString("char*")
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		switch ti.ArrayType() {
-		case gi.ARRAY_TYPE_C:
+		case ARRAY_TYPE_C:
 			out.WriteString(CType(ti.ParamType(0), flags))
 			out.WriteString("*")
-		case gi.ARRAY_TYPE_ARRAY:
+		case ARRAY_TYPE_ARRAY:
 			out.WriteString("GArray*")
-		case gi.ARRAY_TYPE_PTR_ARRAY:
+		case ARRAY_TYPE_PTR_ARRAY:
 			out.WriteString("GPtrArray*")
-		case gi.ARRAY_TYPE_BYTE_ARRAY:
+		case ARRAY_TYPE_BYTE_ARRAY:
 			out.WriteString("GByteArray*")
 		}
-	case gi.TYPE_TAG_GLIST:
+	case TYPE_TAG_GLIST:
 		out.WriteString("GList*")
-	case gi.TYPE_TAG_GSLIST:
+	case TYPE_TAG_GSLIST:
 		out.WriteString("GSList*")
-	case gi.TYPE_TAG_GHASH:
+	case TYPE_TAG_GHASH:
 		out.WriteString("GHashTable*")
-	case gi.TYPE_TAG_ERROR:
+	case TYPE_TAG_ERROR:
 		out.WriteString("GError*")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= TypePointer
 		}
@@ -202,13 +201,13 @@ func CType(ti *gi.TypeInfo, flags TypeFlags) string {
 	return out.String()
 }
 
-func CTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
+func CTypeForInterface(bi *BaseInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
 	ns := bi.Namespace()
 	nm := bi.Name()
 	fullnm := strings.ToLower(ns) + "." + nm
-	out.WriteString(gi.DefaultRepository().CPrefix(ns))
+	out.WriteString(DefaultRepository().CPrefix(ns))
 	out.WriteString(bi.Name())
 
 	_, disguised := GConfig.Sys.DisguisedTypes[fullnm]
@@ -223,7 +222,7 @@ func CTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 // Go Type
 //------------------------------------------------------------------
 
-func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
+func GoTypeForInterface(bi *BaseInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 	printf := PrinterTo(&out)
 	ns := bi.Namespace()
@@ -231,7 +230,7 @@ func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 
 	if flags&TypeListMember != 0 {
 		switch bi.Type() {
-		case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+		case INFO_TYPE_OBJECT, INFO_TYPE_INTERFACE:
 			return GoTypeForInterface(bi, TypePointer|TypeReturn)
 		default:
 			return GoTypeForInterface(bi, TypeReturn)
@@ -239,7 +238,7 @@ func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	}
 
 	switch t := bi.Type(); t {
-	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+	case INFO_TYPE_OBJECT, INFO_TYPE_INTERFACE:
 		if flags&TypeExact != 0 {
 			// exact type for object/interface is always an unsafe.Pointer
 			printf("unsafe.Pointer")
@@ -261,18 +260,18 @@ func GoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 			// counterparts
 			printf("Like")
 		}
-		if flags&TypeReceiver != 0 && t == gi.INFO_TYPE_INTERFACE {
+		if flags&TypeReceiver != 0 && t == INFO_TYPE_INTERFACE {
 			// special case for interfaces, we use *Impl structures
 			// as receivers
 			printf("Impl")
 		}
-	case gi.INFO_TYPE_CALLBACK:
+	case INFO_TYPE_CALLBACK:
 		if flags&TypeExact != 0 {
 			printf("unsafe.Pointer")
 			break
 		}
 		goto handle_default
-	case gi.INFO_TYPE_STRUCT:
+	case INFO_TYPE_STRUCT:
 		if ns == "cairo" {
 			printf(CairoGoTypeForInterface(bi, flags))
 			break
@@ -294,23 +293,23 @@ handle_default:
 	return out.String()
 }
 
-func GoType(ti *gi.TypeInfo, flags TypeFlags) string {
+func GoType(ti *TypeInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			out.WriteString("unsafe.Pointer")
 			break
 		}
 		panic("Non-pointer void type is not supported")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME:
 		if flags&TypeExact != 0 {
 			out.WriteString("unsafe.Pointer")
 		} else {
 			out.WriteString("string")
 		}
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		size := ti.ArrayFixedSize()
 		if size != -1 {
 			fmt.Fprintf(&out, "[%d]", size)
@@ -322,21 +321,21 @@ func GoType(ti *gi.TypeInfo, flags TypeFlags) string {
 			}
 		}
 		out.WriteString(GoType(ti.ParamType(0), flags))
-	case gi.TYPE_TAG_GLIST:
+	case TYPE_TAG_GLIST:
 		if flags&TypeExact != 0 {
 			out.WriteString("unsafe.Pointer")
 		} else {
 			out.WriteString("[]")
 			out.WriteString(GoType(ti.ParamType(0), flags|TypeListMember))
 		}
-	case gi.TYPE_TAG_GSLIST:
+	case TYPE_TAG_GSLIST:
 		if flags&TypeExact != 0 {
 			out.WriteString("unsafe.Pointer")
 		} else {
 			out.WriteString("[]")
 			out.WriteString(GoType(ti.ParamType(0), flags|TypeListMember))
 		}
-	case gi.TYPE_TAG_GHASH:
+	case TYPE_TAG_GHASH:
 		if flags&TypeExact != 0 {
 			out.WriteString("unsafe.Pointer")
 		} else {
@@ -345,10 +344,10 @@ func GoType(ti *gi.TypeInfo, flags TypeFlags) string {
 			out.WriteString("]")
 			out.WriteString(GoType(ti.ParamType(1), flags))
 		}
-	case gi.TYPE_TAG_ERROR:
+	case TYPE_TAG_ERROR:
 		// not used?
 		out.WriteString("error")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= TypePointer
 		}
@@ -363,7 +362,7 @@ func GoType(ti *gi.TypeInfo, flags TypeFlags) string {
 	return out.String()
 }
 
-func GoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
+func GoTypeForTag(tag TypeTag, flags TypeFlags) string {
 	var out bytes.Buffer
 	p := PrinterTo(&out)
 
@@ -373,70 +372,70 @@ func GoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
 
 	if flags&TypeExact != 0 {
 		switch tag {
-		case gi.TYPE_TAG_BOOLEAN:
+		case TYPE_TAG_BOOLEAN:
 			p("int32") // sadly
-		case gi.TYPE_TAG_INT8:
+		case TYPE_TAG_INT8:
 			p("int8")
-		case gi.TYPE_TAG_UINT8:
+		case TYPE_TAG_UINT8:
 			p("uint8")
-		case gi.TYPE_TAG_INT16:
+		case TYPE_TAG_INT16:
 			p("int16")
-		case gi.TYPE_TAG_UINT16:
+		case TYPE_TAG_UINT16:
 			p("uint16")
-		case gi.TYPE_TAG_INT32:
+		case TYPE_TAG_INT32:
 			p("int32")
-		case gi.TYPE_TAG_UINT32:
+		case TYPE_TAG_UINT32:
 			p("uint32")
-		case gi.TYPE_TAG_INT64:
+		case TYPE_TAG_INT64:
 			p("int64")
-		case gi.TYPE_TAG_UINT64:
+		case TYPE_TAG_UINT64:
 			p("uint64")
-		case gi.TYPE_TAG_FLOAT:
+		case TYPE_TAG_FLOAT:
 			p("float32")
-		case gi.TYPE_TAG_DOUBLE:
+		case TYPE_TAG_DOUBLE:
 			p("float64")
-		case gi.TYPE_TAG_GTYPE:
+		case TYPE_TAG_GTYPE:
 			if Config.Namespace != "GObject" {
 				p("gobject.Type")
 			} else {
 				p("Type")
 			}
-		case gi.TYPE_TAG_UNICHAR:
+		case TYPE_TAG_UNICHAR:
 			p("rune")
 		default:
 			panic("unreachable")
 		}
 	} else {
 		switch tag {
-		case gi.TYPE_TAG_BOOLEAN:
+		case TYPE_TAG_BOOLEAN:
 			p("bool")
-		case gi.TYPE_TAG_INT8:
+		case TYPE_TAG_INT8:
 			p("int")
-		case gi.TYPE_TAG_UINT8:
+		case TYPE_TAG_UINT8:
 			p("int")
-		case gi.TYPE_TAG_INT16:
+		case TYPE_TAG_INT16:
 			p("int")
-		case gi.TYPE_TAG_UINT16:
+		case TYPE_TAG_UINT16:
 			p("int")
-		case gi.TYPE_TAG_INT32:
+		case TYPE_TAG_INT32:
 			p("int")
-		case gi.TYPE_TAG_UINT32:
+		case TYPE_TAG_UINT32:
 			p("int")
-		case gi.TYPE_TAG_INT64:
+		case TYPE_TAG_INT64:
 			p("int64")
-		case gi.TYPE_TAG_UINT64:
+		case TYPE_TAG_UINT64:
 			p("uint64")
-		case gi.TYPE_TAG_FLOAT:
+		case TYPE_TAG_FLOAT:
 			p("float64")
-		case gi.TYPE_TAG_DOUBLE:
+		case TYPE_TAG_DOUBLE:
 			p("float64")
-		case gi.TYPE_TAG_GTYPE:
+		case TYPE_TAG_GTYPE:
 			if Config.Namespace != "GObject" {
 				p("gobject.Type")
 			} else {
 				p("Type")
 			}
-		case gi.TYPE_TAG_UNICHAR:
+		case TYPE_TAG_UNICHAR:
 			p("rune")
 		default:
 			panic("unreachable")
@@ -450,21 +449,21 @@ func GoTypeForTag(tag gi.TypeTag, flags TypeFlags) string {
 // Simple Cgo Type (for exported functions)
 //------------------------------------------------------------------
 
-func SimpleCgoType(ti *gi.TypeInfo, flags TypeFlags) string {
+func SimpleCgoType(ti *TypeInfo, flags TypeFlags) string {
 	tag := ti.Tag()
 	switch tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			return "unsafe.Pointer"
 		}
 		panic("Non-pointer void type is not supported")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		bi := ti.Interface()
 		switch bi.Type() {
-		case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
-			ei := gi.ToEnumInfo(bi)
+		case INFO_TYPE_ENUM, INFO_TYPE_FLAGS:
+			ei := ToEnumInfo(bi)
 			return GoTypeForTag(ei.StorageType(), flags | TypeExact)
-		case gi.INFO_TYPE_STRUCT:
+		case INFO_TYPE_STRUCT:
 			ns := bi.Namespace()
 			nm := bi.Name()
 			fullnm := strings.ToLower(ns) + "." + nm
@@ -483,49 +482,49 @@ func SimpleCgoType(ti *gi.TypeInfo, flags TypeFlags) string {
 // Type sizes
 //------------------------------------------------------------------
 
-func TypeSizeForInterface(bi *gi.BaseInfo, flags TypeFlags) int {
+func TypeSizeForInterface(bi *BaseInfo, flags TypeFlags) int {
 	ptrsize := int(unsafe.Sizeof(unsafe.Pointer(nil)))
 	if flags&TypePointer != 0 {
 		return ptrsize
 	}
 
 	switch t := bi.Type(); t {
-	case gi.INFO_TYPE_OBJECT, gi.INFO_TYPE_INTERFACE:
+	case INFO_TYPE_OBJECT, INFO_TYPE_INTERFACE:
 		return ptrsize
-	case gi.INFO_TYPE_STRUCT:
-		si := gi.ToStructInfo(bi)
+	case INFO_TYPE_STRUCT:
+		si := ToStructInfo(bi)
 		return si.Size()
-	case gi.INFO_TYPE_UNION:
-		ui := gi.ToUnionInfo(bi)
+	case INFO_TYPE_UNION:
+		ui := ToUnionInfo(bi)
 		return ui.Size()
-	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
-		ei := gi.ToEnumInfo(bi)
+	case INFO_TYPE_ENUM, INFO_TYPE_FLAGS:
+		ei := ToEnumInfo(bi)
 		return TypeSizeForTag(ei.StorageType(), flags)
-	case gi.INFO_TYPE_CALLBACK:
+	case INFO_TYPE_CALLBACK:
 		return ptrsize
 	}
 	panic("unreachable: " + bi.Type().String())
 }
 
 // returns the size of a type, works only for TypeExact
-func TypeSize(ti *gi.TypeInfo, flags TypeFlags) int {
+func TypeSize(ti *TypeInfo, flags TypeFlags) int {
 	ptrsize := int(unsafe.Sizeof(unsafe.Pointer(nil)))
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			return ptrsize
 		}
 		panic("Non-pointer void type is not supported")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME, gi.TYPE_TAG_GLIST,
-		gi.TYPE_TAG_GSLIST, gi.TYPE_TAG_GHASH:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME, TYPE_TAG_GLIST,
+		TYPE_TAG_GSLIST, TYPE_TAG_GHASH:
 		return ptrsize
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		size := ti.ArrayFixedSize()
 		if size != -1 {
 			return size * TypeSize(ti.ParamType(0), flags)
 		}
 		return ptrsize
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		if ti.IsPointer() {
 			flags |= TypePointer
 		}
@@ -539,38 +538,38 @@ func TypeSize(ti *gi.TypeInfo, flags TypeFlags) int {
 	panic("unreachable: " + ti.Tag().String())
 }
 
-func TypeSizeForTag(tag gi.TypeTag, flags TypeFlags) int {
+func TypeSizeForTag(tag TypeTag, flags TypeFlags) int {
 	ptrsize := int(unsafe.Sizeof(unsafe.Pointer(nil)))
 	if flags&TypePointer != 0 {
 		return ptrsize
 	}
 
 	switch tag {
-	case gi.TYPE_TAG_BOOLEAN:
+	case TYPE_TAG_BOOLEAN:
 		return 4
-	case gi.TYPE_TAG_INT8:
+	case TYPE_TAG_INT8:
 		return 1
-	case gi.TYPE_TAG_UINT8:
+	case TYPE_TAG_UINT8:
 		return 1
-	case gi.TYPE_TAG_INT16:
+	case TYPE_TAG_INT16:
 		return 2
-	case gi.TYPE_TAG_UINT16:
+	case TYPE_TAG_UINT16:
 		return 2
-	case gi.TYPE_TAG_INT32:
+	case TYPE_TAG_INT32:
 		return 4
-	case gi.TYPE_TAG_UINT32:
+	case TYPE_TAG_UINT32:
 		return 4
-	case gi.TYPE_TAG_INT64:
+	case TYPE_TAG_INT64:
 		return 8
-	case gi.TYPE_TAG_UINT64:
+	case TYPE_TAG_UINT64:
 		return 8
-	case gi.TYPE_TAG_FLOAT:
+	case TYPE_TAG_FLOAT:
 		return 4
-	case gi.TYPE_TAG_DOUBLE:
+	case TYPE_TAG_DOUBLE:
 		return 8
-	case gi.TYPE_TAG_GTYPE:
+	case TYPE_TAG_GTYPE:
 		return ptrsize
-	case gi.TYPE_TAG_UNICHAR:
+	case TYPE_TAG_UNICHAR:
 		return 4
 	}
 	panic("unreachable: " + tag.String())
@@ -580,28 +579,28 @@ func TypeSizeForTag(tag gi.TypeTag, flags TypeFlags) int {
 // Type needs wrapper?
 //------------------------------------------------------------------
 
-func TypeNeedsWrapper(ti *gi.TypeInfo) bool {
+func TypeNeedsWrapper(ti *TypeInfo) bool {
 	switch tag := ti.Tag(); tag {
-	case gi.TYPE_TAG_VOID:
+	case TYPE_TAG_VOID:
 		if ti.IsPointer() {
 			return false
 		}
 		panic("Non-pointer void type is not supported")
-	case gi.TYPE_TAG_UTF8, gi.TYPE_TAG_FILENAME, gi.TYPE_TAG_GLIST,
-		gi.TYPE_TAG_GSLIST, gi.TYPE_TAG_GHASH:
+	case TYPE_TAG_UTF8, TYPE_TAG_FILENAME, TYPE_TAG_GLIST,
+		TYPE_TAG_GSLIST, TYPE_TAG_GHASH:
 		return true
-	case gi.TYPE_TAG_ARRAY:
+	case TYPE_TAG_ARRAY:
 		size := ti.ArrayFixedSize()
 		if size != -1 {
 			return TypeNeedsWrapper(ti.ParamType(0))
 		}
 		return true
-	case gi.TYPE_TAG_ERROR:
+	case TYPE_TAG_ERROR:
 		panic("not implemented")
-	case gi.TYPE_TAG_INTERFACE:
+	case TYPE_TAG_INTERFACE:
 		switch ti.Interface().Type() {
-		case gi.INFO_TYPE_CALLBACK, gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS,
-			gi.INFO_TYPE_STRUCT, gi.INFO_TYPE_UNION:
+		case INFO_TYPE_CALLBACK, INFO_TYPE_ENUM, INFO_TYPE_FLAGS,
+			INFO_TYPE_STRUCT, INFO_TYPE_UNION:
 			return false
 		}
 		return true

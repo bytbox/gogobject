@@ -1,11 +1,10 @@
 package main
 
 import (
-	"gobject/gi"
 	"bytes"
 )
 
-func CairoGoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
+func CairoGoTypeForInterface(bi *BaseInfo, flags TypeFlags) string {
 	var out bytes.Buffer
 	p := PrinterTo(&out)
 	name := bi.Name()
@@ -27,7 +26,7 @@ func CairoGoTypeForInterface(bi *gi.BaseInfo, flags TypeFlags) string {
 	return out.String()
 }
 
-func CairoGoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlags) string {
+func CairoGoToCgoForInterface(bi *BaseInfo, arg0, arg1 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	p := PrinterTo(&out)
 	name := bi.Name()
@@ -55,7 +54,7 @@ func CairoGoToCgoForInterface(bi *gi.BaseInfo, arg0, arg1 string, flags ConvFlag
 	return out.String()
 }
 
-func CairoCgoToGoForInterface(bi *gi.BaseInfo, arg1, arg2 string, flags ConvFlags) string {
+func CairoCgoToGoForInterface(bi *BaseInfo, arg1, arg2 string, flags ConvFlags) string {
 	var out bytes.Buffer
 	p := PrinterTo(&out)
 	name := bi.Name()

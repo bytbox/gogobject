@@ -1,20 +1,16 @@
 package main
 
-import (
-	"gobject/gi"
-)
-
 type FunctionBuilder struct {
-	Function *gi.FunctionInfo
+	Function *FunctionInfo
 	Args     []FunctionBuilderArg
 	Rets     []FunctionBuilderArg
-	OrigArgs []*gi.ArgInfo
+	OrigArgs []*ArgInfo
 }
 
 type FunctionBuilderArg struct {
 	Index    int
-	ArgInfo  *gi.ArgInfo
-	TypeInfo *gi.TypeInfo
+	ArgInfo  *ArgInfo
+	TypeInfo *TypeInfo
 }
 
 func IntSliceContains(haystack []int, needle int) bool {
@@ -26,7 +22,7 @@ func IntSliceContains(haystack []int, needle int) bool {
 	return false
 }
 
-func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
+func NewFunctionBuilder(fi *FunctionInfo) *FunctionBuilder {
 	fb := new(FunctionBuilder)
 	fb.Function = fi
 
@@ -67,23 +63,23 @@ func NewFunctionBuilder(fi *gi.FunctionInfo) *FunctionBuilder {
 		ti := ai.Type()
 
 		switch ai.Direction() {
-		case gi.DIRECTION_IN:
+		case DIRECTION_IN:
 			fb.Args = append(fb.Args, FunctionBuilderArg{i, ai, ti})
-		case gi.DIRECTION_INOUT:
+		case DIRECTION_INOUT:
 			fb.Args = append(fb.Args, FunctionBuilderArg{i, ai, ti})
 			fb.Rets = append(fb.Rets, FunctionBuilderArg{i, ai, ti})
-		case gi.DIRECTION_OUT:
+		case DIRECTION_OUT:
 			fb.Rets = append(fb.Rets, FunctionBuilderArg{i, ai, ti})
 		}
 	}
 
 	// add return value if it exists to 'rets'
-	if ret := fi.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := fi.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		fb.Rets = append(fb.Rets, FunctionBuilderArg{-1, nil, ret})
 	}
 
 	// add GError special argument (if any)
-	if fi.Flags()&gi.FUNCTION_THROWS != 0 {
+	if fi.Flags()&FUNCTION_THROWS != 0 {
 		fb.Rets = append(fb.Rets, FunctionBuilderArg{-2, nil, nil})
 	}
 
@@ -95,18 +91,18 @@ func (fb *FunctionBuilder) HasReturnValue() bool {
 		(len(fb.Rets) > 1 && fb.Rets[len(fb.Rets)-2].Index == -1)
 }
 
-func (fb *FunctionBuilder) HasClosureArgument() (int, int, gi.ScopeType) {
+func (fb *FunctionBuilder) HasClosureArgument() (int, int, ScopeType) {
 	for _, arg := range fb.Args {
 		userdata := arg.ArgInfo.Closure()
 		if userdata == -1 {
 			continue
 		}
 
-		if arg.TypeInfo.Tag() != gi.TYPE_TAG_INTERFACE {
+		if arg.TypeInfo.Tag() != TYPE_TAG_INTERFACE {
 			continue
 		}
 
-		if arg.TypeInfo.Interface().Type() != gi.INFO_TYPE_CALLBACK {
+		if arg.TypeInfo.Interface().Type() != INFO_TYPE_CALLBACK {
 			continue
 		}
 
@@ -114,5 +110,5 @@ func (fb *FunctionBuilder) HasClosureArgument() (int, int, gi.ScopeType) {
 		scope := arg.ArgInfo.Scope()
 		return userdata, destroy, scope
 	}
-	return -1, -1, gi.SCOPE_TYPE_INVALID
+	return -1, -1, SCOPE_TYPE_INVALID
 }

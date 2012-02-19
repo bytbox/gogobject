@@ -3,13 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gobject/gi"
 	"strings"
 )
 
 var declared_c_funcs = make(map[string]bool)
 
-func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
+func CFuncForwardDeclaration(fi *FunctionInfo, container *BaseInfo) {
 	symbol := fi.Symbol()
 	if _, declared := declared_c_funcs[symbol]; declared {
 		return
@@ -19,19 +18,19 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 
 	flags := fi.Flags()
 	narg := fi.NumArg()
-	if flags&gi.FUNCTION_THROWS != 0 {
+	if flags&FUNCTION_THROWS != 0 {
 		narg++
 	}
 
 	printf("extern %s %s(", CType(fi.ReturnType(), TypeNone), symbol)
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		printf("%s", CTypeForInterface(container, TypePointer))
 		if narg > 0 {
 			printf(", ")
 		}
 	}
 
-	var closure_scope gi.ScopeType = gi.SCOPE_TYPE_INVALID
+	var closure_scope ScopeType = SCOPE_TYPE_INVALID
 	var closure_userdata int = -1
 	var closure_destroy int = -1
 	var closure_callback int = -1
@@ -41,7 +40,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			printf(", ")
 		}
 
-		if i == n-1 && flags&gi.FUNCTION_THROWS != 0 {
+		if i == n-1 && flags&FUNCTION_THROWS != 0 {
 			printf("GError**")
 			continue
 		}
@@ -50,8 +49,8 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		t := arg.Type()
 
 		if uarg := arg.Closure(); uarg != -1 {
-			if t.Tag() == gi.TYPE_TAG_INTERFACE {
-				if t.Interface().Type() == gi.INFO_TYPE_CALLBACK {
+			if t.Tag() == TYPE_TAG_INTERFACE {
+				if t.Interface().Type() == INFO_TYPE_CALLBACK {
 					if darg := arg.Destroy(); darg != -1 {
 						closure_destroy = darg
 					}
@@ -65,20 +64,20 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		printf("%s", CType(t, TypeNone))
 
 		switch arg.Direction() {
-		case gi.DIRECTION_INOUT, gi.DIRECTION_OUT:
+		case DIRECTION_INOUT, DIRECTION_OUT:
 			printf("*")
 		}
 	}
 	printf(");\n")
 
-	if closure_scope == gi.SCOPE_TYPE_INVALID {
+	if closure_scope == SCOPE_TYPE_INVALID {
 		return
 	}
 	// in case if the function takes callback, generate appropriate wrappers
 	// for Go (gc compiler mainly)
 	printf("#pragma GCC diagnostic ignored \"-Wunused-function\"\n")
 	printf("static %s _%s(", CType(fi.ReturnType(), TypeNone), symbol)
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		printf("%s this", CTypeForInterface(container, TypePointer))
 		if narg > 0 {
 			printf(", ")
@@ -102,7 +101,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			continue
 		}
 
-		if i == n-1 && flags&gi.FUNCTION_THROWS != 0 {
+		if i == n-1 && flags&FUNCTION_THROWS != 0 {
 			printf("GError** arg%d", i)
 			continue
 		}
@@ -111,7 +110,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		printf("%s", CType(arg.Type(), TypeNone))
 
 		switch arg.Direction() {
-		case gi.DIRECTION_INOUT, gi.DIRECTION_OUT:
+		case DIRECTION_INOUT, DIRECTION_OUT:
 			printf("*")
 		}
 		printf(" arg%d", i)
@@ -119,13 +118,13 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	printf(") {\n")
 
 	// body
-	defcall := func(argprint func(i int, t *gi.TypeInfo)) {
+	defcall := func(argprint func(i int, t *TypeInfo)) {
 		printf("\t\t")
-		if ret := fi.ReturnType(); !(ret.Tag() == gi.TYPE_TAG_VOID && !ret.IsPointer()) {
+		if ret := fi.ReturnType(); !(ret.Tag() == TYPE_TAG_VOID && !ret.IsPointer()) {
 			printf("return ")
 		}
 		printf("%s(", symbol)
-		if flags&gi.FUNCTION_IS_METHOD != 0 {
+		if flags&FUNCTION_IS_METHOD != 0 {
 			printf("this")
 			if narg > 0 {
 				printf(", ")
@@ -144,7 +143,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		printf(");\n")
 	}
 	printf("\tif (gofunc) {\n")
-	defcall(func(i int, t *gi.TypeInfo) {
+	defcall(func(i int, t *TypeInfo) {
 		switch i {
 		case closure_userdata:
 			printf("gofunc")
@@ -152,7 +151,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			printf("_c_callback_cleanup")
 		case closure_callback:
 			printf("_%s_c_wrapper", CType(t, TypeNone))
-			if closure_scope == gi.SCOPE_TYPE_ASYNC {
+			if closure_scope == SCOPE_TYPE_ASYNC {
 				printf("_once")
 			}
 		default:
@@ -160,7 +159,7 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		}
 	})
 	printf("\t} else {\n")
-	defcall(func(i int, t *gi.TypeInfo) {
+	defcall(func(i int, t *TypeInfo) {
 		switch i {
 		case closure_userdata, closure_destroy, closure_callback:
 			printf("0")
@@ -178,16 +177,16 @@ func CFuncForwardDeclaration(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 // 20 - functions and methods
 // 30 - struct definitions
 
-func CForwardDeclaration10(bi *gi.BaseInfo) {
+func CForwardDeclaration10(bi *BaseInfo) {
 	switch bi.Type() {
-	case gi.INFO_TYPE_OBJECT:
+	case INFO_TYPE_OBJECT:
 		cctype := CTypeForInterface(bi, TypeNone)
 		printf("typedef struct _%s %s;\n", cctype, cctype)
-	case gi.INFO_TYPE_FLAGS, gi.INFO_TYPE_ENUM:
-		ei := gi.ToEnumInfo(bi)
+	case INFO_TYPE_FLAGS, INFO_TYPE_ENUM:
+		ei := ToEnumInfo(bi)
 		printf("typedef %s %s;\n", CTypeForTag(ei.StorageType(), TypeNone),
 			CTypeForInterface(bi, TypeNone))
-	case gi.INFO_TYPE_STRUCT, gi.INFO_TYPE_INTERFACE, gi.INFO_TYPE_UNION:
+	case INFO_TYPE_STRUCT, INFO_TYPE_INTERFACE, INFO_TYPE_UNION:
 		fullnm := strings.ToLower(bi.Namespace()) + "." + bi.Name()
 		cctype := CTypeForInterface(bi, TypeNone)
 		if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
@@ -195,7 +194,7 @@ func CForwardDeclaration10(bi *gi.BaseInfo) {
 		} else {
 			printf("typedef struct _%s %s;\n", cctype, cctype)
 		}
-	case gi.INFO_TYPE_CALLBACK:
+	case INFO_TYPE_CALLBACK:
 		ctype := CTypeForInterface(bi, TypeNone)
 		// type doesn't matter here, it's just a pointer after all
 		printf("typedef void* %s;\n", ctype)
@@ -205,33 +204,33 @@ func CForwardDeclaration10(bi *gi.BaseInfo) {
 	}
 }
 
-func CForwardDeclaration20(bi *gi.BaseInfo) {
+func CForwardDeclaration20(bi *BaseInfo) {
 	switch bi.Type() {
-	case gi.INFO_TYPE_FUNCTION:
-		fi := gi.ToFunctionInfo(bi)
+	case INFO_TYPE_FUNCTION:
+		fi := ToFunctionInfo(bi)
 		CFuncForwardDeclaration(fi, nil)
-	case gi.INFO_TYPE_OBJECT:
-		oi := gi.ToObjectInfo(bi)
+	case INFO_TYPE_OBJECT:
+		oi := ToObjectInfo(bi)
 		for i, n := 0, oi.NumMethod(); i < n; i++ {
 			meth := oi.Method(i)
 			CFuncForwardDeclaration(meth, bi)
 		}
 		printf("extern GType %s();\n", oi.TypeInit())
-	case gi.INFO_TYPE_INTERFACE:
-		ii := gi.ToInterfaceInfo(bi)
+	case INFO_TYPE_INTERFACE:
+		ii := ToInterfaceInfo(bi)
 		for i, n := 0, ii.NumMethod(); i < n; i++ {
 			meth := ii.Method(i)
 			CFuncForwardDeclaration(meth, bi)
 		}
 		printf("extern GType %s();\n", ii.TypeInit())
-	case gi.INFO_TYPE_STRUCT:
-		si := gi.ToStructInfo(bi)
+	case INFO_TYPE_STRUCT:
+		si := ToStructInfo(bi)
 		for i, n := 0, si.NumMethod(); i < n; i++ {
 			meth := si.Method(i)
 			CFuncForwardDeclaration(meth, bi)
 		}
-	case gi.INFO_TYPE_UNION:
-		ui := gi.ToUnionInfo(bi)
+	case INFO_TYPE_UNION:
+		ui := ToUnionInfo(bi)
 		for i, n := 0, ui.NumMethod(); i < n; i++ {
 			meth := ui.Method(i)
 			CFuncForwardDeclaration(meth, bi)
@@ -239,12 +238,12 @@ func CForwardDeclaration20(bi *gi.BaseInfo) {
 	}
 }
 
-func CForwardDeclaration30(bi *gi.BaseInfo) {
+func CForwardDeclaration30(bi *BaseInfo) {
 	fullnm := strings.ToLower(bi.Namespace()) + "." + bi.Name()
 
 	switch bi.Type() {
-	case gi.INFO_TYPE_STRUCT:
-		si := gi.ToStructInfo(bi)
+	case INFO_TYPE_STRUCT:
+		si := ToStructInfo(bi)
 		size := si.Size()
 		if _, ok := GConfig.Sys.DisguisedTypes[fullnm]; ok {
 			return
@@ -255,8 +254,8 @@ func CForwardDeclaration30(bi *gi.BaseInfo) {
 		} else {
 			printf("struct _%s { uint8_t _data[%d]; };\n", cctype, size)
 		}
-	case gi.INFO_TYPE_UNION:
-		ui := gi.ToUnionInfo(bi)
+	case INFO_TYPE_UNION:
+		ui := ToUnionInfo(bi)
 		size := ui.Size()
 		cctype := CTypeForInterface(bi, TypeNone)
 		if size == 0 {
@@ -271,7 +270,7 @@ func CForwardDeclarations() string {
 	var out bytes.Buffer
 	printf = PrinterTo(&out)
 
-	repo := gi.DefaultRepository()
+	repo := DefaultRepository()
 	deps := repo.Dependencies(Config.Namespace)
 	for _, dep := range deps {
 		depv := strings.Split(dep, "-")
@@ -324,7 +323,7 @@ func GoBindings() string {
 	var out bytes.Buffer
 	printf = PrinterTo(&out)
 
-	repo := gi.DefaultRepository()
+	repo := DefaultRepository()
 	for i, n := 0, repo.NumInfo(Config.Namespace); i < n; i++ {
 		ProcessBaseInfo(repo.Info(Config.Namespace, i))
 	}
@@ -351,7 +350,7 @@ func ProcessTemplate(tplstr string) {
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 
-func ProcessObjectInfo(oi *gi.ObjectInfo) {
+func ProcessObjectInfo(oi *ObjectInfo) {
 	parent := "C unsafe.Pointer"
 	parentlike := ""
 	if p := oi.Parent(); p != nil {
@@ -364,9 +363,9 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 	}
 
 	// interface that this class and its subclasses implement
-	cprefix := gi.DefaultRepository().CPrefix(Config.Namespace)
+	cprefix := DefaultRepository().CPrefix(Config.Namespace)
 	name := oi.Name()
-	cgotype := CgoTypeForInterface(gi.ToBaseInfo(oi), TypePointer)
+	cgotype := CgoTypeForInterface(ToBaseInfo(oi), TypePointer)
 
 	var interfaces bytes.Buffer
 	for i, n := 0, oi.NumInterface(); i < n; i++ {
@@ -399,11 +398,11 @@ func ProcessObjectInfo(oi *gi.ObjectInfo) {
 			printf("// blacklisted: %s.%s (method)\n", name, meth.Name())
 			continue
 		}
-		ProcessFunctionInfo(meth, gi.ToBaseInfo(oi))
+		ProcessFunctionInfo(meth, ToBaseInfo(oi))
 	}
 }
 
-func ProcessStructInfo(si *gi.StructInfo) {
+func ProcessStructInfo(si *StructInfo) {
 	name := si.Name()
 	size := si.Size()
 
@@ -481,11 +480,11 @@ func ProcessStructInfo(si *gi.StructInfo) {
 			continue
 		}
 
-		ProcessFunctionInfo(meth, gi.ToBaseInfo(si))
+		ProcessFunctionInfo(meth, ToBaseInfo(si))
 	}
 }
 
-func ProcessUnionInfo(ui *gi.UnionInfo) {
+func ProcessUnionInfo(ui *UnionInfo) {
 	name := ui.Name()
 	printf("type %s struct {\n", name)
 	printf("\t_data [%d]byte\n", ui.Size())
@@ -497,11 +496,11 @@ func ProcessUnionInfo(ui *gi.UnionInfo) {
 			continue
 		}
 
-		ProcessFunctionInfo(meth, gi.ToBaseInfo(ui))
+		ProcessFunctionInfo(meth, ToBaseInfo(ui))
 	}
 }
 
-func ProcessEnumInfo(ei *gi.EnumInfo) {
+func ProcessEnumInfo(ei *EnumInfo) {
 	// done
 	printf("type %s %s\n", ei.Name(), CgoTypeForTag(ei.StorageType(), TypeNone))
 	printf("const (\n")
@@ -513,7 +512,7 @@ func ProcessEnumInfo(ei *gi.EnumInfo) {
 	printf(")\n")
 }
 
-func ProcessConstantInfo(ci *gi.ConstantInfo) {
+func ProcessConstantInfo(ci *ConstantInfo) {
 	// done
 	name := ci.Name()
 	if Config.Namespace == "Gdk" && strings.HasPrefix(name, "KEY_") {
@@ -526,9 +525,9 @@ func ProcessConstantInfo(ci *gi.ConstantInfo) {
 		ci.Value())
 }
 
-func ProcessCallbackInfo(ci *gi.CallableInfo) {
+func ProcessCallbackInfo(ci *CallableInfo) {
 	// list of args
-	var args []*gi.ArgInfo
+	var args []*ArgInfo
 	for i, n := 0, ci.NumArg(); i < n; i++ {
 		arg := ci.Arg(i)
 		args = append(args, arg)
@@ -543,7 +542,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 
 		// treat any void* as userdata O_o
 		t := arg.Type()
-		if t.Tag() == gi.TYPE_TAG_VOID && t.IsPointer() {
+		if t.Tag() == TYPE_TAG_VOID && t.IsPointer() {
 			userdata = i
 			break
 		}
@@ -570,7 +569,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 		ri++
 	}
 	rt := ci.ReturnType()
-	if !rt.IsPointer() && rt.Tag() == gi.TYPE_TAG_VOID {
+	if !rt.IsPointer() && rt.Tag() == TYPE_TAG_VOID {
 		printf(")\n")
 	} else {
 		printf(") %s\n", GoType(rt, TypeNone))
@@ -590,7 +589,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 	//    friendly types.
 
 	// signature
-	ctype := CTypeForInterface(gi.ToBaseInfo(ci), TypeNone)
+	ctype := CTypeForInterface(ToBaseInfo(ci), TypeNone)
 	printf("//export _%s_c_wrapper\n", ctype)
 	printf("func _%s_c_wrapper(", ctype)
 	for i, arg := range args {
@@ -600,7 +599,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 		printf("%s0 %s", arg.Name(), SimpleCgoType(arg.Type(), TypeNone))
 	}
 	printf(") ")
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("%s ", SimpleCgoType(ret, TypeNone))
 	}
 
@@ -631,7 +630,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 
 	// --- body stage 2 (the callback call)
 	printf("\t")
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("ret1 := ")
 	}
 	printf("%s1(", args[userdata].Name())
@@ -648,7 +647,7 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 	printf(")\n")
 
 	// --- body stage 3 (return value)
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("\tvar ret2 %s\n", CgoType(ret, TypeNone))
 		ownership := OwnershipToConvFlags(ci.CallerOwns())
 		conv := GoToCgo(ret, "ret1", "ret2", ownership)
@@ -667,11 +666,11 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 		printf("%s0 %s", arg.Name(), SimpleCgoType(arg.Type(), TypeNone))
 	}
 	printf(") ")
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("%s ", SimpleCgoType(ret, TypeNone))
 	}
 	printf("{\n\t")
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("ret := ")
 	}
 	printf("_%s_c_wrapper(", ctype)
@@ -684,13 +683,13 @@ func ProcessCallbackInfo(ci *gi.CallableInfo) {
 	printf(")\n")
 	printf("\t%sHolder.Release(%s0)\n", Config.Sys.GNS,
 		args[userdata].Name())
-	if ret := ci.ReturnType(); ret != nil && ret.Tag() != gi.TYPE_TAG_VOID {
+	if ret := ci.ReturnType(); ret != nil && ret.Tag() != TYPE_TAG_VOID {
 		printf("\treturn ret\n")
 	}
 	printf("}\n")
 }
 
-func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
+func ProcessFunctionInfo(fi *FunctionInfo, container *BaseInfo) {
 	var fullnm string
 	flags := fi.Flags()
 	name := fi.Name()
@@ -698,17 +697,17 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	// --- header
 	fb := NewFunctionBuilder(fi)
 	printf("func ")
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		// add receiver if it's a method
 		printf("(this0 %s) ",
 			GoTypeForInterface(container, TypePointer|TypeReceiver))
 		fullnm = container.Name() + "."
 	}
 	switch {
-	case flags&gi.FUNCTION_IS_CONSTRUCTOR != 0:
+	case flags&FUNCTION_IS_CONSTRUCTOR != 0:
 		// special names for constructors
 		name = fmt.Sprintf("New%s%s", container.Name(), CtorSuffix(name))
-	case flags&gi.FUNCTION_IS_METHOD == 0 && container != nil:
+	case flags&FUNCTION_IS_METHOD == 0 && container != nil:
 		name = fmt.Sprintf("%s%s", container.Name(), LowerCaseToCamelCase(name))
 	default:
 		name = fmt.Sprintf("%s", LowerCaseToCamelCase(name))
@@ -727,7 +726,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	case 0:
 		// do nothing if there are not return values
 	case 1:
-		if flags&gi.FUNCTION_IS_CONSTRUCTOR != 0 {
+		if flags&FUNCTION_IS_CONSTRUCTOR != 0 {
 			// override return types for constructors, We can't
 			// return generic widget here as C does. Go's type
 			// system is stronger.
@@ -760,7 +759,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	// --- body stage 1 (Go to C conversions)
 
 	// var declarations
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		printf("\tvar this1 %s\n", CgoTypeForInterface(container, TypePointer))
 	}
 	for _, arg := range fb.Args {
@@ -783,7 +782,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 			continue
 		}
 
-		if ret.ArgInfo.Direction() == gi.DIRECTION_INOUT {
+		if ret.ArgInfo.Direction() == DIRECTION_INOUT {
 			continue
 		}
 
@@ -797,7 +796,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	}
 
 	// conversions
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		conv := GoToCgoForInterface(container, "this0", "this1", ConvPointer)
 		printf("%s", PrintLinesWithIndent(conv))
 	}
@@ -807,10 +806,10 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		printf("%s", PrintLinesWithIndent(conv))
 
 		// register callback in the global map
-		if arg.TypeInfo.Tag() == gi.TYPE_TAG_INTERFACE {
+		if arg.TypeInfo.Tag() == TYPE_TAG_INTERFACE {
 			bi := arg.TypeInfo.Interface()
-			if bi.Type() == gi.INFO_TYPE_CALLBACK {
-				if arg.ArgInfo.Scope() != gi.SCOPE_TYPE_CALL {
+			if bi.Type() == INFO_TYPE_CALLBACK {
+				if arg.ArgInfo.Scope() != SCOPE_TYPE_CALL {
 					printf("\t%sHolder.Grab(%s1)\n", Config.Sys.GNS, nm)
 				}
 			}
@@ -833,11 +832,11 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 
 	userdata, destroy, scope := fb.HasClosureArgument()
 	printf("C.")
-	if scope != gi.SCOPE_TYPE_INVALID {
+	if scope != SCOPE_TYPE_INVALID {
 		printf("_")
 	}
 	printf("%s(", fi.Symbol())
-	if flags&gi.FUNCTION_IS_METHOD != 0 {
+	if flags&FUNCTION_IS_METHOD != 0 {
 		printf("this1")
 		if len(fb.OrigArgs) > 0 {
 			printf(", ")
@@ -852,7 +851,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 
 		var arg string
 		dir := oarg.Direction()
-		if dir == gi.DIRECTION_INOUT || dir == gi.DIRECTION_OUT {
+		if dir == DIRECTION_INOUT || dir == DIRECTION_OUT {
 			arg = fmt.Sprintf("&%s1", oarg.Name())
 		} else {
 			arg = fmt.Sprintf("%s1", oarg.Name())
@@ -864,7 +863,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 		printf("%s", arg)
 		ri++
 	}
-	if flags&gi.FUNCTION_THROWS != 0 {
+	if flags&FUNCTION_THROWS != 0 {
 		printf(", &err1")
 	}
 	printf(")\n")
@@ -875,7 +874,7 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	for _, ret := range fb.Rets {
 		switch ret.Index {
 		case -1:
-			if flags&gi.FUNCTION_IS_CONSTRUCTOR != 0 {
+			if flags&FUNCTION_IS_CONSTRUCTOR != 0 {
 				printf("\tvar ret2 %s\n",
 					GoTypeForInterface(container, TypePointer|TypeReturn))
 			} else {
@@ -914,18 +913,18 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 				lenarg.Name()+"1")
 		}
 
-		var ownership gi.Transfer
+		var ownership Transfer
 		if ret.Index == -1 {
 			ownership = fi.CallerOwns()
 		} else {
 			ownership = ret.ArgInfo.OwnershipTransfer()
-			if ret.ArgInfo.Direction() == gi.DIRECTION_INOUT {
+			if ret.ArgInfo.Direction() == DIRECTION_INOUT {
 				// not sure if it's true in all cases, but so far
-				ownership = gi.TRANSFER_NOTHING
+				ownership = TRANSFER_NOTHING
 			}
 		}
 		var conv string
-		if flags&gi.FUNCTION_IS_CONSTRUCTOR != 0 && ret.Index == -1 {
+		if flags&FUNCTION_IS_CONSTRUCTOR != 0 && ret.Index == -1 {
 			conv = CgoToGoForInterface(container, "ret1", "ret2",
 				ConvPointer|OwnershipToConvFlags(ownership))
 		} else {
@@ -961,10 +960,10 @@ func ProcessFunctionInfo(fi *gi.FunctionInfo, container *gi.BaseInfo) {
 	printf("\n}\n")
 }
 
-func ProcessInterfaceInfo(ii *gi.InterfaceInfo) {
+func ProcessInterfaceInfo(ii *InterfaceInfo) {
 	name := ii.Name()
-	cprefix := gi.DefaultRepository().CPrefix(ii.Namespace())
-	cgotype := CgoTypeForInterface(gi.ToBaseInfo(ii), TypePointer)
+	cprefix := DefaultRepository().CPrefix(ii.Namespace())
+	cgotype := CgoTypeForInterface(ToBaseInfo(ii), TypePointer)
 
 	printf("%s\n", ExecuteTemplate(InterfaceTemplate, map[string]string{
 		"name":     name,
@@ -980,52 +979,52 @@ func ProcessInterfaceInfo(ii *gi.InterfaceInfo) {
 			printf("// blacklisted: %s.%s (method)\n", name, meth.Name())
 			continue
 		}
-		ProcessFunctionInfo(meth, gi.ToBaseInfo(ii))
+		ProcessFunctionInfo(meth, ToBaseInfo(ii))
 	}
 }
 
-func ProcessBaseInfo(bi *gi.BaseInfo) {
+func ProcessBaseInfo(bi *BaseInfo) {
 	switch bi.Type() {
-	case gi.INFO_TYPE_UNION:
+	case INFO_TYPE_UNION:
 		if IsBlacklisted("unions", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessUnionInfo(gi.ToUnionInfo(bi))
-	case gi.INFO_TYPE_STRUCT:
+		ProcessUnionInfo(ToUnionInfo(bi))
+	case INFO_TYPE_STRUCT:
 		if IsBlacklisted("structs", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessStructInfo(gi.ToStructInfo(bi))
-	case gi.INFO_TYPE_ENUM, gi.INFO_TYPE_FLAGS:
+		ProcessStructInfo(ToStructInfo(bi))
+	case INFO_TYPE_ENUM, INFO_TYPE_FLAGS:
 		if IsBlacklisted("enums", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessEnumInfo(gi.ToEnumInfo(bi))
-	case gi.INFO_TYPE_CONSTANT:
+		ProcessEnumInfo(ToEnumInfo(bi))
+	case INFO_TYPE_CONSTANT:
 		if IsBlacklisted("constants", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessConstantInfo(gi.ToConstantInfo(bi))
-	case gi.INFO_TYPE_CALLBACK:
+		ProcessConstantInfo(ToConstantInfo(bi))
+	case INFO_TYPE_CALLBACK:
 		if IsBlacklisted("callbacks", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessCallbackInfo(gi.ToCallableInfo(bi))
-	case gi.INFO_TYPE_FUNCTION:
+		ProcessCallbackInfo(ToCallableInfo(bi))
+	case INFO_TYPE_FUNCTION:
 		if IsBlacklisted("functions", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessFunctionInfo(gi.ToFunctionInfo(bi), nil)
-	case gi.INFO_TYPE_INTERFACE:
+		ProcessFunctionInfo(ToFunctionInfo(bi), nil)
+	case INFO_TYPE_INTERFACE:
 		if IsBlacklisted("interfaces", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessInterfaceInfo(gi.ToInterfaceInfo(bi))
-	case gi.INFO_TYPE_OBJECT:
+		ProcessInterfaceInfo(ToInterfaceInfo(bi))
+	case INFO_TYPE_OBJECT:
 		if IsBlacklisted("objects", bi.Name()) {
 			goto blacklisted
 		}
-		ProcessObjectInfo(gi.ToObjectInfo(bi))
+		ProcessObjectInfo(ToObjectInfo(bi))
 	default:
 		printf("// TODO: %s (%s)\n", bi.Name(), bi.Type())
 	}
